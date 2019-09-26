@@ -16,7 +16,58 @@ public class SwiftPedometerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler
         let eventChannel = FlutterEventChannel.init(name: "pedometer.eventChannel", binaryMessenger: registrar.messenger())
         eventChannel.setStreamHandler(instance)
 
+        let methodChannelQuerySteps = FlutterMethodChannel(name: "pedometer.querySteps", binaryMessenger: registrar.messenger())
+        registrar.addMethodCallDelegate(instance, channel: methodChannelQuerySteps)
     }
+
+     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        switch call.method {
+        case "querySteps":
+            if let args = call.arguments as? Dictionary<String, String> {               
+                if args.count == 2 {
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+                    
+                    let fromDate = dateFormatter.date(from: args["from"]!)!
+                    let toDate = dateFormatter.date(from: args["to"]!)!
+
+                    pedometer.queryPedometerData(from: fromDate, to: toDate, withHandler: {(pedometerData, error) in
+                        if let data = pedometerData {
+                            result(data.numberOfSteps)
+                            // let _stepCount : Int = (data.numberOfSteps as! Int)
+                            // result(_stepCount);
+                        } else {
+                            result(-2);
+                        }
+                    });
+                } else {
+                    result(-3)
+                }
+            } else {
+                result(-5)
+            }
+        default:
+            result(FlutterMethodNotImplemented)
+        }
+    }
+
+    // Handle query steps
+    // public func querySteps(from: String, to: String) -> Int {
+    //     let dateFormatter = DateFormatter()
+    //     dateFormatter.dateFormat = "yyyy-MM-dd"
+        
+    //     let fromDate = dateFormatter.date(from: from)
+    //     let toDate = dateFormatter.date(from: to)
+
+    //     pedometer.queryPedometerData(from: fromDate, to: toDate, withHandler: {(pedometerData, error)in
+    //         if let data = pedometerData{
+    //             let _stepCount : Int = (data.numberOfSteps as! Int)
+    //             return _stepCount
+    //         } else {
+    //             return -2
+    //         }
+    //     });
+    // }
 
     // Handle stream emitting (Swift => Dart)
     private func sendStepCountEvent(stepCount: Int) {

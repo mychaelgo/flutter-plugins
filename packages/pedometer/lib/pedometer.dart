@@ -6,6 +6,9 @@ class Pedometer {
   static const EventChannel _eventChannel =
       const EventChannel("pedometer.eventChannel");
 
+  static const MethodChannel _methodChannel =
+      MethodChannel('pedometer.querySteps');
+
   /// The pedometer stream will continuously return the cumulative number of
   /// steps taken since the application was started.
   /// A step count is an [int] value.
@@ -19,4 +22,22 @@ class Pedometer {
     return _pedometerStream;
   }
 
+  Future<int> querySteps(
+    String from,
+    String to,
+  ) async {
+    try {
+      final int steps = await _methodChannel.invokeMethod(
+        'querySteps',
+        <String, String>{
+          'from': from,
+          'to': to,
+        },
+      );
+      return steps;
+    } on PlatformException catch (e) {
+      print("Failed to Invoke: '${e.message}'.");
+      return -1;
+    }
+  }
 }

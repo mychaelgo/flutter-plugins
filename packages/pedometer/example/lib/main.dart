@@ -13,6 +13,7 @@ class _MyAppState extends State<MyApp> {
   Pedometer _pedometer;
   StreamSubscription<int> _subscription;
   String _stepCountValue = 'unknown';
+  String _queriedStepCountValue = 'unknown';
 
   @override
   void initState() {
@@ -33,6 +34,19 @@ class _MyAppState extends State<MyApp> {
     _pedometer = new Pedometer();
     _subscription = _pedometer.pedometerStream.listen(_onData,
         onError: _onError, onDone: _onDone, cancelOnError: true);
+
+    _querySteps();
+  }
+
+  void _querySteps() async {
+    var now = DateTime.now().toUtc().toIso8601String();
+    print('now: $now');
+    int queriedSteps =
+        await _pedometer.querySteps("2019-09-20T09:27:31.243978Z", now);
+    print("queriedSteps $queriedSteps");
+    setState(() {
+      _queriedStepCountValue = "$queriedSteps";
+    });
   }
 
   void stopListening() {
@@ -47,7 +61,6 @@ class _MyAppState extends State<MyApp> {
 
   void _onError(error) => print("Flutter Pedometer Error: $error");
 
-
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -55,7 +68,12 @@ class _MyAppState extends State<MyApp> {
         appBar: new AppBar(
           title: const Text('Pedometer example app'),
         ),
-        body: new Text('Step count: $_stepCountValue')
+        body: Column(
+          children: <Widget>[
+            Text('Step count: $_stepCountValue'),
+            Text('Query step count: $_queriedStepCountValue'),
+          ],
+        ),
       ),
     );
   }
